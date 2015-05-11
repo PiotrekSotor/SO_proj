@@ -1,0 +1,75 @@
+tabSleepClient 		// wskazuje ktory klient ma wisiec na waitcie
+int liczbaKas;
+int liczbaKasjerow;
+int liczbaWolnychKas;
+int liczbaKlientkowWSklepie;
+int maxKlientow; // czyli liczba utworzonych watkow client
+int liczbaPracownikow // czyli liczba utworzonych watkow worker
+
+
+n kolejek dla n kas sklepowych, w kolejce id klienta
+tabAktywneKolejki - do których kolejek można się ustawiać, będzie false jeśli chcemy zamknąć kasę
+tabKlientOczekujeWKolejce - false jesli nie oczekuje, true jesli oczekuje
+
+
+void client(int id)
+{
+	while (1)
+	{
+		wait jesli wytwórca wyłączył klienta, lub po prostu nie został jeszcze ani razu wpuszczony
+		
+		wchodzi do sklepu - zwieksza licznik obecnych klientow
+		robi sleep na czas zakupów
+		wait w jesli nieobecne sa towary, ale z timeoutem, bo do usranej śmierci nikt czekać nie bedzie
+
+		ustawienie sie w najkrotszej kolejce
+		
+		wait dopoki tabKlientOczekujeWKolejce
+
+		wyjscie z sklepu, zmiejszenie liczby obecnyh klientow
+			
+
+	}
+
+}
+
+
+void saler(int id)
+{
+	while(1)
+	{
+		wait jesli kierownik wyłączył kasjera
+		
+		jesli ma kogos w kolejce
+			sleep random
+			pobranie idKlienta z kolejki
+			zmiana tabOczekujacyWKolejce na false  
+			
+		
+	}
+}
+void producer(int id)
+{
+	while(1)
+	{
+		wait jesli kierownik wyłączył wykladowce
+		wait jesli pelno zasobow
+		dodaj zasob
+		random sleep
+	}
+}
+
+void kierownik sklepu()
+{
+	while (1)
+	{
+		if produkty < 0.2 * maxProdukty;
+			zmien kasjera na wykladowce
+		if liczbaKlientowWKolejce > 5*liczbaKasjerow
+			zmien wykladowce na kasjera		
+		if produkty > 0.8 * maxProdukty;
+			zmien wykladowce na kasjera
+		if liczbaKlientowWKolejce < liczbaKasjerow
+			zmien kasjera na wykladowce
+	}
+}

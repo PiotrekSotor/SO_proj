@@ -1,3 +1,3 @@
 all: final
 final: ncurses_hello_world.cpp
-	g++ -o hello_world ncurses_hello_world.cpp -lncurses
+	g++ -o hello_world ncurses_hello_world.cpp -lncurses -pthread

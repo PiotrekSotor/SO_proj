@@ -1,6 +1,7 @@
 #include<ncurses.h>
 #include<time.h>
 #include<iostream>
+#include<signal.h>
 #include<thread>
 #include<vector>
 #include<queue>
@@ -229,7 +230,7 @@ void wykladowca(int id)
 
 void dostawca(int id)
 {
-    while (!endFlag)
+    while (1)
     {
         std::unique_lock<std::mutex> lock(mx_magazyn);
         cv_magazyn.wait(lock,[]{return warehouse < max_warehouse || endFlag == 1;});
@@ -248,27 +249,24 @@ void dostawca(int id)
 
 void control()
 {
-
-	//std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	while (!endFlag || 1)
 	{
 		//std::unique_lock<std::mutex> lock(m);
         timeout(20);
 		char a;
 		a=getch();
-
-		//if ((int)a != -1)printw("koniec control \n");
-		//std::this_thread::sleep_for(std::chrono::milliseconds(500));
-		//std::cout<<" endFlag: "<<endFlag<<"\n input: "<<a<<"\n";
 		if (a == 'q')
 		{
-			printw("koniec control \n");
+			//printw("koniec control \n");
 			endFlag = 1;
 
             notify_all_clients();
             notify_all_kasjerzy();
             notify_all_wykladowcy();
             cv_zasoby.notify_all();
+            //std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            endwin();
+            raise(SIGINT);
 		}
 		else if (a == 'a')
 		{
@@ -314,6 +312,7 @@ void control()
                 vec_cv_wykladowca[l_aktywnych_wykladowcow].notify_all();
                 l_aktywnych_wykladowcow++;
             }
+
 		}
 		else if (a == 'c')
 		{
@@ -326,14 +325,14 @@ void control()
 
 		//std::this_thread::sleep_for(std::chrono::milliseconds(500));
 	}
-	//printw("koniec control \n");
+	printw("koniec control \n");
 }
 
 void automated_control()
 {
     while (!endFlag)
     {
-        mvprintw(5,30,"auto");
+        //mvprintw(5,30,"auto");
         if (l_aktywnych_kasjerow == 0 && l_client_shopping != 0)
         {
             //if need deacivate wykladowca
@@ -351,7 +350,7 @@ void automated_control()
                 l_aktywnych_kasjerow++;
             }
         }
-        if (store < min_store + 0.6*(max_store-min_store))
+        if (store < min_store + 0.5*(max_store-min_store))
         {
             //if need deactivate kasjer
             if ( l_aktywnych_kasjerow + l_aktywnych_wykladowcow == l_pracownicy && l_aktywnych_kasjerow  > 0)
@@ -385,7 +384,7 @@ void automated_control()
                 l_aktywnych_kasjerow++;
             }
         }
-        else if (store >= min_store + 1 *(max_store - min_store) -1)
+        else if (store >= min_store + 0.9 *(max_store - min_store))
         {
             // deacivate wykladowca
             if (l_aktywnych_wykladowcow  > 0)
@@ -404,10 +403,10 @@ void automated_control()
                 vec_active_kasjer[l_aktywnych_kasjerow] = 0;
             }
         }
-        std::this_thread::sleep_for(std::chrono::milliseconds(2000));
+        std::this_thread::sleep_for(std::chrono::milliseconds(5000));
 
     }
-
+    printw("koniec auto\n");
 }
 
 void displayer()
@@ -436,8 +435,13 @@ void displayer()
         }
 
         mvprintw(i+16+5,5,"q - wyjscie");
+        mvprintw(i+16+6,5,"a/z - aktywuj/deaktywuj klienta");
+        mvprintw(i+16+7,5,"s/x - aktywuj/deaktywuj kasjera");
+        mvprintw(i+16+8,5,"d/c - aktywuj/deaktywuj wykladowce");
+
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
+    printw("koniec displayer\n");
 }
 
 int main(int argc, char** argv) // argv[1] - cons, argv[2] - produc
@@ -506,12 +510,12 @@ int main(int argc, char** argv) // argv[1] - cons, argv[2] - produc
         vec_thread_dostawca[i] = std::thread(dostawca,i);
 
 
+	for (int i=0;i<l_kasjer;++i)
+		vec_thread_kasjer[i].join();
+    printw("lol2\n");
 	for (int i=0;i<l_client;++i)
 		vec_thread_client[i].join();
     printw("lol1\n");
-    for (int i=0;i<l_kasjer;++i)
-		vec_thread_kasjer[i].join();
-    printw("lol2\n");
     for (int i=0;i<l_pracownicy;++i)
 		vec_thread_wykladowca[i].join();
     for (int i=0;i<l_dostawcy;++i)
@@ -540,12 +544,12 @@ void notify_all_clients()
 }
 void notify_all_kasjerzy()
 {
-    for (int i=0;i<l_client;++i)
+    for (int i=0;i<l_kasjer;++i)
         vec_cv_kasjer[i].notify_all();
 
 }
 void notify_all_wykladowcy()
 {
-    for (int i=0;i<l_client;++i)
+    for (int i=0;i<l_pracownicy;++i)
         vec_cv_wykladowca[i].notify_all();
 }
